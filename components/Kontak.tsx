@@ -1,7 +1,7 @@
 "use client";
 
 import FadeIn from "./FadeIn";
-import Wave from "./Wave"; // Import Wave
+import Wave from "./Wave";
 import {
   FaEnvelope,
   FaWhatsapp,
@@ -9,21 +9,15 @@ import {
   FaPaperPlane,
 } from "react-icons/fa";
 
-export default function Contact() {
+export default function Kontak() {
   return (
-    // UBAH: bg-white menjadi bg-gray-50 agar kontras dengan section sebelumnya
     <section id="contact" className="relative py-24 bg-gray-50">
-      {/* WAVE TOP: Warna Putih (fill-white) */}
-      {/* Ini membuat efek "lelehan" dari section Projects di atasnya */}
       <div className="absolute top-0 left-0 w-full z-0 -mt-1 leading-0">
         <Wave position="top" color="fill-white" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        {/* Header Section */}
         <div className="text-center mb-16 pt-8">
-          {" "}
-          {/* Tambah pt-8 agar judul tidak ketabrak wave */}
           <FadeIn direction="up">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Hubungi Saya
@@ -112,6 +106,8 @@ export default function Contact() {
                   <input
                     type="text"
                     id="name"
+                    // TAMBAHAN PENTING: name="name"
+                    name="name"
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white"
                     placeholder="Masukkan nama Anda"
                     required
@@ -128,6 +124,8 @@ export default function Contact() {
                   <input
                     type="email"
                     id="email"
+                    // TAMBAHAN PENTING: name="email"
+                    name="email"
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white"
                     placeholder="nama@email.com"
                     required
@@ -143,6 +141,8 @@ export default function Contact() {
                   </label>
                   <textarea
                     id="message"
+                    // TAMBAHAN PENTING: name="message"
+                    name="message"
                     rows={4}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50 focus:bg-white resize-none"
                     placeholder="Tulis pesan Anda..."
@@ -163,8 +163,6 @@ export default function Contact() {
         </div>
       </div>
 
-      {/* WAVE BOTTOM: Warna Gelap/Hitam (fill-gray-900) */}
-      {/* Ini menyambungkan section Contact (Abu) ke Footer (Hitam) */}
       <div className="absolute bottom-0 left-0 w-full z-0 leading-0">
         <Wave position="bottom" color="fill-gray-900" />
       </div>

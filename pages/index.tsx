@@ -128,6 +128,7 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
           {totalPages > 1 && (
             <div className="flex justify-center items-center mt-16 gap-2">
               <button
+                aria-label="Halaman Sebelumnya"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className={`p-3 rounded-full border ${
@@ -156,6 +157,7 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
               )}
 
               <button
+                aria-label="Halaman Selanjutnya"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className={`p-3 rounded-full border ${
