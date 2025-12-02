@@ -26,7 +26,7 @@ export const projects: Project[] = [
     image: "/images/resaji.webp",
     details:
       "reSaji adalah platform marketplace makanan berlebih. Saya membangun backend menggunakan Node.js serta API Machine Learning berbasis Flask.",
-    links: "https://github.com/taugk/resaji-backend",
+    links: "https://play.google.com/store/apps/details?id=com.mbzr.resaji&pcampaignid=web_share",
   },
 
   {
