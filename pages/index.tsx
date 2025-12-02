@@ -1,78 +1,187 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { NextPage, GetStaticProps } from "next";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import Layout from "../components/Layout";
+import Hero from "../components/Hero";
+import About from "../components/About";
+import Skills from "../components/Skills";
+import Kontak from "../components/Kontak";
+import FadeIn from "../components/FadeIn";
+import { projects } from "../data/projects";
+import { Project } from "../types";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export default function Home() {
-  return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+interface HomeProps {
+  projectsData: Project[];
 }
+
+const ITEMS_PER_PAGE = 6;
+
+const Home: NextPage<HomeProps> = ({ projectsData }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(projectsData.length / ITEMS_PER_PAGE);
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentProjects = projectsData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <Layout>
+      <Hero />
+      <About />
+      <Skills />
+
+      <section id="projects" className="py-20 bg-white min-h-screen">
+        <div className="container mx-auto px-6">
+          <FadeIn direction="up">
+            <h2 className="text-3xl font-bold text-center mb-4">Proyek</h2>
+            <p className="text-gray-500 text-center mb-12">
+              Menampilkan halaman {currentPage} dari {totalPages}
+            </p>
+          </FadeIn>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {currentProjects.map((project, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  key={project.id}
+                  className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition bg-white flex flex-col h-full"
+                >
+                  {/* --- PERBAIKAN GAMBAR --- */}
+                  {/* h-48 menetapkan tinggi tetap agar rapi. relative untuk posisi badge. */}
+                  <div className="h-48 bg-gray-200 overflow-hidden relative">
+                    {/* Link membungkus gambar. block h-full w-full agar area klik memenuhi kotak */}
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      className="block h-full w-full"
+                    >
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        // object-cover memastikan gambar tidak gepeng, tapi mengisi penuh kotak
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
+                      />
+                    </Link>
+
+                    {/* Badge Role - pointer-events-none agar kalau diklik tembus ke gambar */}
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-blue-600 text-xs font-bold px-2 py-1 rounded shadow-sm pointer-events-none">
+                      {project.role}
+                    </div>
+                  </div>
+
+                  <div className="p-6 flex-grow flex flex-col">
+                    {/* --- PERBAIKAN JUDUL --- */}
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition">
+                      <Link
+                        href={`/projects/${project.slug}`}
+                        className="hover:underline"
+                      >
+                        {project.title}
+                      </Link>
+                    </h3>
+
+                    <p className="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">
+                      {project.desc}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.tech.slice(0, 3).map((t, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded uppercase tracking-wider"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-6 pt-0 mt-auto border-t border-gray-50">
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      className="inline-flex items-center text-blue-600 font-semibold hover:underline mt-4"
+                    >
+                      Lihat Detail &rarr;
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-16 gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`p-3 rounded-full border ${
+                  currentPage === 1
+                    ? "text-gray-300 border-gray-200 cursor-not-allowed"
+                    : "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
+                } transition`}
+              >
+                <FaChevronLeft />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (number) => (
+                  <button
+                    key={number}
+                    onClick={() => handlePageChange(number)}
+                    className={`w-10 h-10 rounded-full font-bold transition ${
+                      currentPage === number
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {number}
+                  </button>
+                )
+              )}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`p-3 rounded-full border ${
+                  currentPage === totalPages
+                    ? "text-gray-300 border-gray-200 cursor-not-allowed"
+                    : "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
+                } transition`}
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <Kontak />
+    </Layout>
+  );
+};
+
+export const getStaticProps: GetStaticProps = async () => {
+  return {
+    props: {
+      projectsData: projects,
+    },
+  };
+};
+
+export default Home;
