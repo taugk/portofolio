@@ -1,7 +1,8 @@
 import type { NextPage, GetStaticProps } from "next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import Layout from "../components/Layout";
 import Hero from "../components/Hero";
 import About from "../components/About";
@@ -18,17 +19,71 @@ interface HomeProps {
 
 const ITEMS_PER_PAGE = 6;
 
+/* ================================
+   🔥 ANALYTICS HELPER
+================================ */
+const trackEvent = (action: string, label: string) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", action, {
+      event_category: "engagement",
+      event_label: label,
+    });
+  }
+};
+
 const Home: NextPage<HomeProps> = ({ projectsData }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasTracked, setHasTracked] = useState(false);
 
   const totalPages = Math.ceil(projectsData.length / ITEMS_PER_PAGE);
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
   const currentProjects = projectsData.slice(indexOfFirstItem, indexOfLastItem);
 
+  /* ================================
+     🔥 TRACK SCROLL (ANTI SPAM)
+  ================================= */
+  useEffect(() => {
+    const handleScroll = () => {
+      if (hasTracked) return;
+
+      const section = document.getElementById("projects");
+      if (!section) return;
+
+      const rect = section.getBoundingClientRect();
+
+      if (rect.top < window.innerHeight && rect.bottom >= 0) {
+        trackEvent("view_section", "Projects Section");
+        setHasTracked(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasTracked]);
+
+  /* ================================
+     🔥 TRACK DURATION
+  ================================= */
+  useEffect(() => {
+    const start = Date.now();
+
+    return () => {
+      const duration = Math.round((Date.now() - start) / 1000);
+      trackEvent("time_spent", `${duration} detik`);
+    };
+  }, []);
+
+  /* ================================
+     🔥 PAGINATION TRACKING
+  ================================= */
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
-    document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+    trackEvent("pagination_click", `Halaman ${pageNumber}`);
+
+    document.getElementById("projects")?.scrollIntoView({
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -57,40 +112,44 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
             >
               {currentProjects.map((project, index) => (
                 <motion.div
+                  key={project.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
-                  key={project.id}
                   className="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-xl transition bg-white flex flex-col h-full"
                 >
-                  {/* --- PERBAIKAN GAMBAR --- */}
-                  {/* h-48 menetapkan tinggi tetap agar rapi. relative untuk posisi badge. */}
+                  {/* IMAGE */}
                   <div className="h-48 bg-gray-200 overflow-hidden relative">
-                    {/* Link membungkus gambar. block h-full w-full agar area klik memenuhi kotak */}
                     <Link
                       href={`/projects/${project.slug}`}
                       className="block h-full w-full"
+                      onClick={() =>
+                        trackEvent("click_project_image", project.title)
+                      }
                     >
-                      <img
+                      <Image
                         src={project.image}
                         alt={project.title}
-                        // object-cover memastikan gambar tidak gepeng, tapi mengisi penuh kotak
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
+                        fill
+                        className="object-cover group-hover:scale-105 transition duration-500"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </Link>
 
-                    {/* Badge Role - pointer-events-none agar kalau diklik tembus ke gambar */}
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-blue-600 text-xs font-bold px-2 py-1 rounded shadow-sm pointer-events-none">
                       {project.role}
                     </div>
                   </div>
 
                   <div className="p-6 flex-grow flex flex-col">
-                    {/* --- PERBAIKAN JUDUL --- */}
+                    {/* TITLE */}
                     <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 transition">
                       <Link
                         href={`/projects/${project.slug}`}
                         className="hover:underline"
+                        onClick={() =>
+                          trackEvent("click_project_title", project.title)
+                        }
                       >
                         {project.title}
                       </Link>
@@ -112,10 +171,12 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
                     </div>
                   </div>
 
+                  {/* DETAIL BUTTON */}
                   <div className="p-6 pt-0 mt-auto border-t border-gray-50">
                     <Link
                       href={`/projects/${project.slug}`}
                       className="inline-flex items-center text-blue-600 font-semibold hover:underline mt-4"
+                      onClick={() => trackEvent("click_detail", project.title)}
                     >
                       Lihat Detail &rarr;
                     </Link>
@@ -125,17 +186,19 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
             </motion.div>
           </AnimatePresence>
 
+          {/* PAGINATION */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center mt-16 gap-2">
               <button
                 aria-label="Halaman Sebelumnya"
+                title="Halaman Sebelumnya"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className={`p-3 rounded-full border ${
                   currentPage === 1
                     ? "text-gray-300 border-gray-200 cursor-not-allowed"
                     : "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-                } transition`}
+                }`}
               >
                 <FaChevronLeft />
               </button>
@@ -144,27 +207,30 @@ const Home: NextPage<HomeProps> = ({ projectsData }) => {
                 (number) => (
                   <button
                     key={number}
+                    aria-label={`Halaman ${number}`}
+                    title={`Halaman ${number}`}
                     onClick={() => handlePageChange(number)}
-                    className={`w-10 h-10 rounded-full font-bold transition ${
+                    className={`w-10 h-10 rounded-full font-bold ${
                       currentPage === number
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                        ? "bg-blue-600 text-white"
                         : "text-gray-600 hover:bg-gray-100"
                     }`}
                   >
                     {number}
                   </button>
-                )
+                ),
               )}
 
               <button
                 aria-label="Halaman Selanjutnya"
+                title="Halaman Selanjutnya"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className={`p-3 rounded-full border ${
                   currentPage === totalPages
                     ? "text-gray-300 border-gray-200 cursor-not-allowed"
                     : "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-                } transition`}
+                }`}
               >
                 <FaChevronRight />
               </button>
